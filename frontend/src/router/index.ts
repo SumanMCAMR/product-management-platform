@@ -1,4 +1,5 @@
-import { createRouter, createWebHistory, type RouteRecordRaw } from 'vue-router'
+import { createRouter, createWebHistory, type RouteRecordRaw } from 'vue-router';
+import { useAuthStore } from '../stores/auth';
 
 const routes: Array<RouteRecordRaw> = [
     {
@@ -10,22 +11,54 @@ const routes: Array<RouteRecordRaw> = [
         path: '/login',
         name: 'Login',
         component: () => import('../views/Login.vue'),
+        meta: { guestOnly: true },
     },
     {
         path: '/register',
         name: 'Register',
         component: () => import('../views/Register.vue'),
+        meta: { guestOnly: true },
     },
     {
         path: '/products',
         name: 'Products',
         component: () => import('../views/Products.vue'),
+        meta: { requiresAuth: true },
     },
-]
+    {
+        path: '/:pathMatch(.*)*',
+        name: 'NotFound',
+        component: () => import('../views/NotFound.vue'),
+    }
+
+];
 
 const router = createRouter({
     history: createWebHistory(),
     routes,
-})
+});
 
-export default router
+router.beforeEach(async (to, from, next) => {
+    const auth = useAuthStore();
+
+    if (!auth.user && localStorage.getItem('pinia')) {
+        try {
+            await auth.fetchUser();
+        } catch (error) {
+            console.warn('Could not fetch user:', error);
+        }
+    }
+
+    if (to.meta.requiresAuth && !auth.isLoggedIn) {
+        return next('/login');
+    }
+
+
+    if (to.meta.guestOnly && auth.isLoggedIn) {
+        return next('/products');
+    }
+
+    next();
+});
+
+export default router;
