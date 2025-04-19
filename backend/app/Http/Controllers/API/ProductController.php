@@ -16,16 +16,30 @@ class ProductController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
-    public function index(): JsonResponse
+    public function index(Request $request): JsonResponse
     {
-        $products = Product::all();
+        $query = Product::query();
+
+        if ($search = $request->query('search')) {
+            $query->where('name', 'like', "%{$search}%");
+        }
+
+        $perPage = $request->query('per_page', 10);
+        $products = $query->paginate($perPage)->appends($request->query());
 
         return response()->json([
             'success' => true,
             'message' => 'Products retrieved successfully.',
-            'data' => ProductResource::collection($products)
+            'data' => ProductResource::collection($products),
+            'meta' => [
+                'current_page' => $products->currentPage(),
+                'last_page' => $products->lastPage(),
+                'per_page' => $products->perPage(),
+                'total' => $products->total(),
+            ]
         ]);
     }
+
 
     /**
      * Store a newly created resource in storage.
