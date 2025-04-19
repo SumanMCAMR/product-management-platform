@@ -1,21 +1,22 @@
 <template>
-    <div class="register">
-      <h2>Register</h2>
-      <form @submit.prevent="register">
-        <input v-model="form.name" type="text" placeholder="Name" />
-        <span v-if="form?.errors?.name">{{ form.errors.name[0] }}</span>
+    <div class="register flex flex-col items-center justify-center h-screen bg-blue-500">
+      <h2 class="text-4xl font-bold text-white">Register</h2>
+      <form @submit.prevent="register" class="mt-8 space-y-4">
+        <input v-model="form.name" type="text" placeholder="Name" class="block w-full px-4 py-2 text-gray-700 bg-white border rounded-md focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-transparent" />
+        <span v-if="form?.errors?.name" class="text-red-500 text-sm">{{ form.errors.name[0] }}</span>
 
-        <input v-model="form.email" type="email" placeholder="Email" />
-        <span v-if="form?.errors?.email">{{ form?.errors?.email[0] }}</span>
+        <input v-model="form.email" type="email" placeholder="Email" class="block w-full px-4 py-2 text-gray-700 bg-white border rounded-md focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-transparent" />
+        <span v-if="form?.errors?.email" class="text-red-500 text-sm">{{ form?.errors?.email[0] }}</span>
 
-        <input v-model="form.password" type="password" placeholder="Password" />
-        <span v-if="form?.errors?.password">{{ form?.errors?.password[0] }}</span>
+        <input v-model="form.password" type="password" placeholder="Password" class="block w-full px-4 py-2 text-gray-700 bg-white border rounded-md focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-transparent" />
+        <span v-if="form?.errors?.password" class="text-red-500 text-sm">{{ form?.errors?.password[0] }}</span>
 
-        <input v-model="form.password_confirmation" type="password" placeholder="Confirm Password" />
-        <span v-if="form?.errors?.password_confirmation">{{ form?.errors?.password_confirmation[0] }}</span>
+        <input v-model="form.password_confirmation" type="password" placeholder="Confirm Password" class="block w-full px-4 py-2 text-gray-700 bg-white border rounded-md focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-transparent" />
+        <span v-if="form?.errors?.password_confirmation" class="text-red-500 text-sm">{{ form?.errors?.password_confirmation[0] }}</span>
 
-        <button type="submit">Register</button>
+        <button type="submit" class="w-full px-4 py-2 font-bold text-white bg-yellow-500 rounded-md hover:bg-yellow-600 focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-transparent">Register</button>
       </form>
+      <RouterLink to="/login" class="mt-4 text-white hover:underline">Login</RouterLink>
     </div>
   </template>
   
@@ -38,12 +39,7 @@ import type { RegisterCredentials } from '@/types/auth';
 
 const register = async () => {
   try {
-    await auth.register({
-      name: form.name,
-      email: form.email,
-      password: form.password,
-      password_confirmation: form.password_confirmation,
-    })
+    await auth.register(form);
     router.push('/')
   } catch (error: any) {
     if (error.response?.status === 422) {

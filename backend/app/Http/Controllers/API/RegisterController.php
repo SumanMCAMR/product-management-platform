@@ -86,4 +86,17 @@ class RegisterController extends Controller
             'user' => $user
         ]);
     }
+
+    public function logout(): JsonResponse
+    {
+        /**
+         * @disregard
+         */
+        auth()->user()->tokens()->delete();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Logout successfully'
+        ]);
+    }
 }

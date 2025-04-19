@@ -18,15 +18,9 @@ export const useAuthStore = defineStore('auth', {
 
     actions: {
         async fetchUser() {
-            this.loading = true;
-            try {
-                const res = await api.get('/user');
-                this.user = res.data;
-            } catch {
-                this.user = null;
-            } finally {
-                this.loading = false;
-            }
+            if (!this.token) return;
+            const res = await api.get('/user');
+            this.user = res.data;
         },
 
         async login(credentials: LoginCredentials) {
@@ -38,9 +32,10 @@ export const useAuthStore = defineStore('auth', {
             return res;
         },
         async register(credentials: RegisterCredentials) {
-            await api.get('/sanctum/csrf-cookie');
             const res = await api.post('/register', credentials);
-            await this.fetchUser();
+            this.token = res.data.access_token;
+            this.user = res.data.user;
+            localStorage.setItem('token', this.token);
             return res;
         },
 
