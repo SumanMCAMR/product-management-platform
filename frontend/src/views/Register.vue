@@ -22,7 +22,7 @@
   <script lang="ts" setup>
   import { reactive } from 'vue'
   import { useRouter } from 'vue-router'
-import { useAuthStore } from '@/stores/auth';
+import { useAuthStore } from '../stores/auth';
 import type { RegisterCredentials } from '@/types/auth';
   
   const router = useRouter();

@@ -36,7 +36,7 @@ const login = async () => {
     });
     router.push('/')
   } catch (error: any) {
-    if (error.response.status === 422) {
+    if (error?.response?.status === 422) {
       form.errors = error.response.data.errors
     }
     console.error('Login failed:', error);
