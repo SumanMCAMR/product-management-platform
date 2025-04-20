@@ -7,3 +7,23 @@ export interface Product {
     created_at: string;
     updated_at: string;
 }
+
+export interface ProductState {
+    products: Product[];
+    product: Product | null;
+    loading: boolean;
+    error: string | null;
+    meta: {
+        current_page: number;
+        last_page: number;
+        per_page: number;
+        total: number;
+    };
+    search: string;
+}
+export interface ProductPayload {
+    name: string;
+    price: number | string;
+    description: string | null;
+    image: string | null;
+}

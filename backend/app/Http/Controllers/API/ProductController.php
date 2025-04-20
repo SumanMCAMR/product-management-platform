@@ -8,6 +8,7 @@ use App\Http\Resources\ProductResource;
 use App\Models\Product;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Str;
 
 class ProductController extends Controller
 {
@@ -25,7 +26,7 @@ class ProductController extends Controller
         }
 
         $perPage = $request->query('per_page', 10);
-        $products = $query->paginate($perPage)->appends($request->query());
+        $products = $query->orderBy('created_at', 'desc')->paginate($perPage)->appends($request->query());
 
         return response()->json([
             'success' => true,
@@ -53,17 +54,27 @@ class ProductController extends Controller
 
         $validator = Validator::make($input, [
             'name' => 'required',
-            'detail' => 'required'
+            'description' => 'required',
+            'price' => 'required|numeric',
+            'image' => 'required|url'
         ]);
 
         if ($validator->fails()) {
             return response()->json([
                 'success' => false,
-                'message' => 'Validation Error.',
+                'message' => $validator->getMessageBag()->first(),
                 'error' => $validator->errors()
-            ]);
+            ], 422);
         }
 
+        $slug = Str::slug($input['name']);
+        if (Product::where('slug', $slug)->exists()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Product name already exists.'
+            ], 422);
+        }
+        $input['slug'] = $slug;
         $product = Product::create($input);
 
         return response()->json([
@@ -79,22 +90,22 @@ class ProductController extends Controller
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function show($id): JsonResponse
+    public function show($slug): JsonResponse
     {
-        $product = Product::find($id);
+        try {
+            $product = Product::where('slug', $slug)->firstOrFail();
 
-        if (is_null($product)) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Product retrieved successfully.',
+                'data' => new ProductResource($product)
+            ]);
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
             return response()->json([
                 'success' => false,
                 'message' => 'Product not found.'
-            ]);
+            ], 404);
         }
-
-        return response()->json([
-            'success' => true,
-            'message' => 'Product retrieved successfully.',
-            'data' => new ProductResource($product)
-        ]);
     }
 
     /**
@@ -110,19 +121,31 @@ class ProductController extends Controller
 
         $validator = Validator::make($input, [
             'name' => 'required',
-            'detail' => 'required'
+            'description' => 'required',
+            'price' => 'required|numeric',
+            'image' => 'required|url'
         ]);
 
         if ($validator->fails()) {
             return response()->json([
                 'success' => false,
-                'message' => 'Validation Error.',
+                'message' => $validator->getMessageBag()->first(),
                 'error' => $validator->errors()
-            ]);
+            ], 422);
+        }
+
+        $slug = Str::slug($input['name']);
+        if ($product->slug != $slug && Product::where('slug', $slug)->exists()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Product name already exists.'
+            ], 422);
         }
 
         $product->name = $input['name'];
-        $product->detail = $input['detail'];
+        $product->description = $input['description'];
+        $product->price = $input['price'];
+        $product->image = $input['image'];
         $product->save();
 
         return response()->json([

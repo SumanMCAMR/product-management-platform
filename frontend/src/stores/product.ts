@@ -1,23 +1,11 @@
 import { defineStore } from 'pinia';
 import api from '@/axios';
-import type { Product } from '@/types/product';
-
-interface ProductState {
-    products: Product[];
-    loading: boolean;
-    error: string | null;
-    meta: {
-        current_page: number;
-        last_page: number;
-        per_page: number;
-        total: number;
-    };
-    search: string;
-}
+import type { Product, ProductPayload, ProductState } from '@/types/product';
 
 export const useProductStore = defineStore('product', {
     state: (): ProductState => ({
         products: [],
+        product: null,
         loading: false,
         error: null,
         meta: {
@@ -66,6 +54,33 @@ export const useProductStore = defineStore('product', {
         },
         setSearch(value: string) {
             this.search = value;
-        }
+        },
+        async createProduct(payload: ProductPayload) {
+            return api.post('/products', payload).then((res) => {
+                this.fetchProducts();
+                return res;
+            });
+        },
+
+        async updateProduct(id: number, payload: ProductPayload) {
+            return api.put(`/products/${id}`, payload).then((res) => {
+                this.fetchProducts();
+                return res;
+            });
+        },
+
+        async fetchSingleProduct(id: number) {
+            return api.get(`/products/${id}`).then((res) => {
+                this.products.push(res.data);
+                return res;
+            });
+        },
+
+        async deleteProduct(id: number) {
+            return api.delete(`/products/${id}`).then(async () => {
+                await this.fetchProducts();
+            });
+        },
+
     }
 });
