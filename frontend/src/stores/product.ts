@@ -35,9 +35,13 @@ export const useProductStore = defineStore('product', {
     },
 
     actions: {
-        async fetchProducts(page = 1, perPage = this.meta.per_page) {
+        async fetchProducts(page: number = 1, perPage?: number): Promise<void> {
             this.loading = true;
             this.error = null;
+
+            if (perPage === undefined) {
+                perPage = this.meta.per_page;
+            }
 
             try {
                 const res = await api.get('/products', {
@@ -47,8 +51,13 @@ export const useProductStore = defineStore('product', {
                         search: this.search
                     }
                 });
-                this.products = res.data.data;
-                this.meta = res.data.meta;
+                this.products = res.data.data as Product[];
+                this.meta = res.data.meta as {
+                    current_page: number;
+                    last_page: number;
+                    per_page: number;
+                    total: number;
+                };
             } catch (error: any) {
                 this.error = error?.response?.data?.message || 'Failed to fetch products.';
             } finally {
