@@ -97,20 +97,6 @@ npm run dev
 
 ---
 
-## ✅ To Do (Future Scope)
-
-- Role-based permissions (admin/user)
-- Product categories/tags
-- Export products to CSV/PDF
-- Unit & feature tests
-- Drag-and-drop image support
-
----
-
 ## 👨‍💻 Author
 
 Developed by **Suman** with ❤️ using modern full-stack tools.
-
----
-
-Let me know if you want this auto-pushed to GitHub with `README.md`, `.gitignore`, etc. Or want a logo/cover image suggestion!
