@@ -12,6 +12,7 @@ export interface LoginCredentials {
     email: string;
     password: string;
     errors?: LoginErrors;
+    loading?: boolean;
 }
 
 export interface RegisterCredentials extends LoginCredentials {

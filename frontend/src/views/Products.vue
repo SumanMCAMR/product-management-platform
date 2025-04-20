@@ -12,6 +12,7 @@ import Drawer from 'primevue/drawer';
 import ProductForm from './components/ProductForm.vue'
 import Badge from 'primevue/badge';
 import { useToast } from 'primevue';
+import Image from 'primevue/image';
 
 const productStore = useProductStore();
 const createProductVisible = ref<boolean>(false);
@@ -40,7 +41,8 @@ const handleProductDelete = async (id: number) => {
 
 <template>
   <div class="max-w-5xl mx-auto p-4">
-    <h2 class="text-2xl font-bold text-blue-600 mb-4">Products</h2>
+    <i class="pi pi-home !text-2xl text-yellow-600 cursor-pointer" @click="$router.push('/')"></i>
+    <h2 class="text-2xl font-bold text-blue-600 mb-4 inline-block ml-2">Products</h2>
 
     <div class="mb-4 flex justify-between gap-3">
       <div class="flex-1">
@@ -75,7 +77,7 @@ const handleProductDelete = async (id: number) => {
       </Column>
       <Column header="Image">
         <template #body="{ data }">
-          <img :src="data.image" :alt="data.name" class="w-24 rounded" />
+          <Image :src="data.image" :alt="data.name" class="w-24 rounded" width="200" preview />
         </template>
       </Column>
       <Column field="price" header="Price">
@@ -96,7 +98,8 @@ const handleProductDelete = async (id: number) => {
     </DataTable>
   </div>
 
-  <Drawer v-model:visible="createProductVisible" header="Drawer" position="right">
-    <ProductForm :productId="activeProductId" />
+  <Drawer v-model:visible="createProductVisible" :header="activeProductId ? 'Update Product' : 'Create Product'"
+    position="right" style="width: 30rem;">
+    <ProductForm :productId="activeProductId" @close="createProductVisible = false, activeProductId = undefined" />
   </Drawer>
 </template>

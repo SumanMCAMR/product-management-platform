@@ -16,6 +16,8 @@ const props = defineProps<{ productId?: number }>();
 
 const productId = props.productId;
 const isEdit = !!productId;
+const loading = ref(false);
+const emit = defineEmits(['close']);
 
 const form = ref({
     name: '',
@@ -27,21 +29,30 @@ const form = ref({
 onMounted(async () => {
     if (isEdit && productId) {
         const product = productStore.products.find(p => p.id === productId);
-        if (!product) {
-            await productStore.fetchSingleProduct(productId);
-        }
-        if (productStore.product) {
+        if (product) {
+            productStore.product = product;
             form.value = {
-                name: productStore.product.name,
-                description: productStore.product.description ?? '',
-                price: Number(productStore.product.price),
+                name: product.name,
+                description: product.description ?? '',
+                price: Number(product.price),
                 image: null,
             };
+        } else {
+            await productStore.fetchSingleProduct(productId);
+            if (productStore.product) {
+                form.value = {
+                    name: productStore.product.name,
+                    description: productStore.product.description ?? '',
+                    price: Number(productStore.product.price),
+                    image: null,
+                };
+            }
         }
     }
 });
 
 const saveProduct = async () => {
+    loading.value = true;
     const formData = new FormData() as unknown as ProductPayload;
     formData.append('name', form.value.name);
     formData.append('description', form.value.description);
@@ -62,6 +73,15 @@ const saveProduct = async () => {
         }
     } catch (error) {
         toast.add({ severity: 'error', summary: 'Failed to save product', life: 3000 });
+    } finally {
+        loading.value = false;
+        form.value = {
+            name: '',
+            description: '',
+            price: 0,
+            image: null,
+        };
+        emit('close');
     }
 };
 
@@ -86,11 +106,7 @@ const previewImage = ref<string | null>(null);
 
 
 <template>
-    <div class="max-w-xl mx-auto p-6">
-        <h2 class="text-2xl font-semibold text-blue-700 mb-4">
-            {{ productId ? 'Update Product' : 'Create Product' }}
-        </h2>
-
+    <div class="max-w-xl mx-auto p-4">
         <div class="flex flex-col gap-4">
             <label class="flex flex-col gap-1">
                 <span>Name</span>
@@ -122,7 +138,8 @@ const previewImage = ref<string | null>(null);
                     class="w-24 h-24 object-cover rounded" />
             </div>
 
-            <Button label="Save" icon="pi pi-check" class="w-fit mt-2 self-end" @click="saveProduct" />
+            <Button :label="isEdit ? 'Update' : 'Create'" :loading="loading"
+                :icon="isEdit ? 'pi pi-pencil' : 'pi pi-check'" class="w-full mt-2 self-end" @click="saveProduct" />
         </div>
     </div>
 </template>
