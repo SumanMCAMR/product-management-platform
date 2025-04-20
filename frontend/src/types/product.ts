@@ -22,6 +22,7 @@ export interface ProductState {
     search: string;
 }
 export interface ProductPayload {
+    [x: string]: any;
     name: string;
     price: number | string;
     description: string | null;

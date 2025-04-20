@@ -13,7 +13,7 @@ export const useAuthStore = defineStore('auth', {
     }),
 
     getters: {
-        isLoggedIn: (state) => !!state.token,
+        isLoggedIn: (state) => !!state.user,
     },
 
     actions: {

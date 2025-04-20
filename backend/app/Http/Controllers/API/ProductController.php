@@ -9,6 +9,7 @@ use App\Models\Product;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Storage;
 
 class ProductController extends Controller
 {
@@ -53,10 +54,10 @@ class ProductController extends Controller
         $input = $request->all();
 
         $validator = Validator::make($input, [
-            'name' => 'required',
-            'description' => 'required',
+            'name' => 'required|string',
+            'description' => 'nullable|string',
             'price' => 'required|numeric',
-            'image' => 'required|url'
+            'image' => 'nullable|image|max:2048',
         ]);
 
         if ($validator->fails()) {
@@ -75,6 +76,12 @@ class ProductController extends Controller
             ], 422);
         }
         $input['slug'] = $slug;
+
+        if ($request->hasFile('image')) {
+            $path = $request->file('image')->store('uploads', 'public');
+            $input['image'] = asset('storage/' . $path);
+        }
+
         $product = Product::create($input);
 
         return response()->json([
@@ -118,12 +125,12 @@ class ProductController extends Controller
     public function update(Request $request, Product $product): JsonResponse
     {
         $input = $request->all();
-
         $validator = Validator::make($input, [
             'name' => 'required',
             'description' => 'required',
             'price' => 'required|numeric',
-            'image' => 'required|url'
+            'image_url' => 'nullable|url',
+            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048'
         ]);
 
         if ($validator->fails()) {
@@ -135,17 +142,34 @@ class ProductController extends Controller
         }
 
         $slug = Str::slug($input['name']);
-        if ($product->slug != $slug && Product::where('slug', $slug)->exists()) {
+        if ($product->slug !== $slug && Product::where('slug', $slug)->exists()) {
             return response()->json([
                 'success' => false,
                 'message' => 'Product name already exists.'
             ], 422);
         }
 
+        if ($request->hasFile('image')) {
+            if ($product->image && Storage::disk('public')->exists($product->image)) {
+                Storage::disk('public')->delete($product->image);
+            }
+
+            $imagePath = $request->file('image')->store('products', 'public');
+            $product->image = Storage::url($imagePath);
+        } elseif (!$request->filled('image_url')) {
+            if ($product->image && Storage::disk('public')->exists($product->image)) {
+                Storage::disk('public')->delete($product->image);
+            }
+
+            $product->image = null;
+        } elseif ($request->filled('image_url')) {
+            $product->image = $input['image_url'];
+        }
+
         $product->name = $input['name'];
         $product->description = $input['description'];
         $product->price = $input['price'];
-        $product->image = $input['image'];
+        $product->slug = $slug;
         $product->save();
 
         return response()->json([
@@ -154,6 +178,7 @@ class ProductController extends Controller
             'data' => new ProductResource($product)
         ]);
     }
+
 
     /**
      * Remove the specified resource from storage.

@@ -46,6 +46,7 @@ const router = createRouter({
 
 router.beforeEach(async (to, from, next) => {
     const auth = useAuthStore();
+    await auth.fetchUser();
 
     if (!auth.user && localStorage.getItem('pinia')) {
         try {

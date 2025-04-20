@@ -8,12 +8,10 @@ import Image from 'primevue/image';
 import Button from 'primevue/button';
 import ProgressSpinner from 'primevue/progressspinner';
 import Message from 'primevue/message';
-import type { Product } from '@/types/product';
 
 const route = useRoute();
 const router = useRouter();
 const productStore = useProductStore();
-const product = ref<Product | null>(null);
 const loading = ref(true);
 const error = ref('');
 

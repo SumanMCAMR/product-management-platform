@@ -1,77 +1,89 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue';
-import { useRouter } from 'vue-router';
 import { useProductStore } from '@/stores/product';
-
 import InputText from 'primevue/inputtext';
 import InputNumber from 'primevue/inputnumber';
 import Textarea from 'primevue/textarea';
 import Button from 'primevue/button';
+import FileUpload from 'primevue/fileupload';
 import { useToast } from 'primevue/usetoast';
+import type { ProductPayload } from '@/types/product';
 
 const productStore = useProductStore();
 const toast = useToast();
-const router = useRouter();
 
 const props = defineProps<{ productId?: number }>();
 
-const productId = props.productId as number | undefined;
+const productId = props.productId;
+const isEdit = !!productId;
 
-// Form fields
-const name = ref('');
-const price = ref<number | null>(null);
-const description = ref('');
-const image = ref('');
+const form = ref({
+    name: '',
+    description: '',
+    price: 0,
+    image: null as File | null,
+});
 
 onMounted(async () => {
-    if (productId) {
-        let product = productStore.products.find(p => p.id === Number(productId));
-
+    if (isEdit && productId) {
+        const product = productStore.products.find(p => p.id === productId);
         if (!product) {
-            await productStore.fetchSingleProduct(Number(productId));
-            product = productStore.products.find(p => p.id === Number(productId));
+            await productStore.fetchSingleProduct(productId);
         }
-
-        if (product) {
-            name.value = product.name;
-            price.value = Number(product.price);
-            description.value = product.description || '';
-            image.value = product.image || '';
-        } else {
-            toast.add({ severity: 'error', summary: 'Product not found', life: 3000 });
+        if (productStore.product) {
+            form.value = {
+                name: productStore.product.name,
+                description: productStore.product.description ?? '',
+                price: Number(productStore.product.price),
+                image: null,
+            };
         }
     }
 });
 
-// Save or update
 const saveProduct = async () => {
-    const payload = {
-        name: name.value,
-        price: price.value!,
-        description: description.value,
-        image: image.value,
-    };
+    const formData = new FormData() as unknown as ProductPayload;
+    formData.append('name', form.value.name);
+    formData.append('description', form.value.description);
+    formData.append('price', form.value.price.toString());
+    formData.append('image_url', productStore.product?.image ?? '');
+
+    if (form.value.image) {
+        formData.append('image', form.value.image);
+    }
 
     try {
-        if (productId) {
-            await productStore.updateProduct(Number(productId), payload);
-            toast.add({ severity: 'success', summary: 'Product updated successfully', life: 3000 });
+        if (isEdit && productId) {
+            await productStore.updateProduct(productId, formData);
+            toast.add({ severity: 'success', summary: 'Product updated', life: 3000 });
         } else {
-            await productStore.createProduct(payload);
-            toast.add({ severity: 'success', summary: 'Product created successfully', life: 3000 });
+            await productStore.createProduct(formData);
+            toast.add({ severity: 'success', summary: 'Product created', life: 3000 });
         }
-
-        router.push('/products');
-    } catch (error: any) {
-        toast.add({
-            severity: 'error',
-            summary: 'Error',
-            detail: error?.response?.data?.message || 'Something went wrong',
-            life: 4000,
-        });
+    } catch (error) {
+        toast.add({ severity: 'error', summary: 'Failed to save product', life: 3000 });
     }
 };
+
+function handleFileUpload(event: any) {
+    const file = event.files?.[0];
+    if (!file) return;
+
+    form.value.image = file;
+
+    const reader = new FileReader();
+    reader.onload = (e: ProgressEvent<FileReader>) => {
+        const result = e.target?.result as string | null;
+        if (result) {
+            previewImage.value = result;
+        }
+    };
+    reader.readAsDataURL(file);
+}
+const previewImage = ref<string | null>(null);
+
 </script>
+
 
 <template>
     <div class="max-w-xl mx-auto p-6">
@@ -82,26 +94,35 @@ const saveProduct = async () => {
         <div class="flex flex-col gap-4">
             <label class="flex flex-col gap-1">
                 <span>Name</span>
-                <InputText v-model="name" placeholder="Enter product name" />
+                <InputText v-model="form.name" placeholder="Enter product name" />
             </label>
 
             <label class="flex flex-col gap-1">
                 <span>Price</span>
-                <InputNumber v-model="price" inputId="currency" mode="currency" currency="USD" locale="en-US"
+                <InputNumber v-model="form.price" mode="currency" currency="USD" locale="en-US"
                     placeholder="Enter product price" />
             </label>
 
             <label class="flex flex-col gap-1">
                 <span>Description</span>
-                <Textarea v-model="description" rows="4" autoResize placeholder="Enter product description" />
+                <Textarea v-model="form.description" rows="4" autoResize placeholder="Enter product description" />
             </label>
 
             <label class="flex flex-col gap-1">
-                <span>Image URL</span>
-                <InputText v-model="image" placeholder="Enter image URL" />
+                <span>Upload Image</span>
+                <FileUpload mode="basic" accept="image/*" customUpload chooseLabel="Choose Image" class="w-full"
+                    @select="handleFileUpload" />
             </label>
 
-            <Button label="Save" icon="pi pi-check" class="w-fit mt-2" @click="saveProduct" />
+            <div v-if="form.image || productStore.product?.image" class="relative mt-3 w-24">
+                <i class="pi pi-times absolute top-[-6px] left-[77px] z-10 bg-white text-red-500 p-1 rounded-full shadow cursor-pointer"
+                    @click="form.image ? form.image = null : (productStore.product as any).image = undefined" />
+                <img v-if="previewImage || productStore.product?.image"
+                    :src="previewImage || productStore.product?.image" alt="Product Image"
+                    class="w-24 h-24 object-cover rounded" />
+            </div>
+
+            <Button label="Save" icon="pi pi-check" class="w-fit mt-2 self-end" @click="saveProduct" />
         </div>
     </div>
 </template>
