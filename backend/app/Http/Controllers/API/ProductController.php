@@ -90,10 +90,10 @@ class ProductController extends Controller
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function show($slug): JsonResponse
+    public function show($id): JsonResponse
     {
         try {
-            $product = Product::where('slug', $slug)->firstOrFail();
+            $product = Product::find($id);
 
             return response()->json([
                 'success' => true,

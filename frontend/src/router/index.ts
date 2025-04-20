@@ -26,6 +26,12 @@ const routes: Array<RouteRecordRaw> = [
         meta: { requiresAuth: true },
     },
     {
+        path: '/products/:id',
+        name: 'products.show',
+        component: () => import('../views/Show.vue'),
+        props: true,
+    },
+    {
         path: '/:pathMatch(.*)*',
         name: 'NotFound',
         component: () => import('../views/NotFound.vue'),

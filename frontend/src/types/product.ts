@@ -3,7 +3,7 @@ export interface Product {
     name: string;
     description: string | null;
     price: string;
-    image: string | null;
+    image: string | undefined;
     created_at: string;
     updated_at: string;
 }

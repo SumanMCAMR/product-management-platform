@@ -71,7 +71,8 @@ export const useProductStore = defineStore('product', {
 
         async fetchSingleProduct(id: number) {
             return api.get(`/products/${id}`).then((res) => {
-                this.products.push(res.data);
+                this.products.push(res.data?.data as Product);
+                this.product = res.data?.data as Product;
                 return res;
             });
         },
@@ -81,6 +82,9 @@ export const useProductStore = defineStore('product', {
                 await this.fetchProducts();
             });
         },
+        formatCurrency(value: number) {
+            return value.toLocaleString('en-US', { style: 'currency', currency: 'USD' });
+        }
 
     }
 });

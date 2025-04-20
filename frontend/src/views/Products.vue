@@ -30,10 +30,6 @@ const onPageChange = (event: DataTablePageEvent) => {
   productStore.fetchProducts(page, per_page);
 };
 
-const formatCurrency = (value: number) => {
-  return value.toLocaleString('en-US', { style: 'currency', currency: 'USD' });
-};
-
 const toast = useToast();
 
 const handleProductDelete = async (id: number) => {
@@ -55,7 +51,7 @@ const handleProductDelete = async (id: number) => {
           </InputGroupAddon>
         </InputGroup>
       </div>
-      <div class="flex-1 flex justify-end">
+      <div class="flex-1 flex justify-end gap-3 items-center">
         <Badge severity="success" :value="productStore.meta?.total" />
         <Button label="Add Product" severity="success" @click="createProductVisible = true" />
       </div>
@@ -70,7 +66,13 @@ const handleProductDelete = async (id: number) => {
       :rows="productStore.meta.per_page" :totalRecords="productStore.meta.total"
       :first="(productStore.meta.current_page - 1) * productStore.meta.per_page" :rowsPerPageOptions="[5, 10, 20, 50]"
       @page="onPageChange" tableStyle="min-width: 50rem">
-      <Column field="name" header="Name" />
+      <Column field="name" header="Name">
+        <template #body="{ data }">
+          <RouterLink :to="{ name: 'products.show', params: { id: data.id } }">
+            {{ data.name }}
+          </RouterLink>
+        </template>
+      </Column>
       <Column header="Image">
         <template #body="{ data }">
           <img :src="data.image" :alt="data.name" class="w-24 rounded" />
@@ -78,7 +80,7 @@ const handleProductDelete = async (id: number) => {
       </Column>
       <Column field="price" header="Price">
         <template #body="{ data }">
-          {{ formatCurrency(data.price) }}
+          {{ productStore.formatCurrency(data.price) }}
         </template>
       </Column>
       <Column field="description" header="Description" />
