@@ -21,7 +21,7 @@ A modern full-stack application built with **Laravel API**, **Vue.js 3**, **Pini
 
 | Frontend                 | Backend         |
 |--------------------------|------------------|
-| Vue 3 (Composition API)  | Laravel 10       |
+| Vue 3 (Composition API)  | Laravel 11       |
 | Pinia (State Management) | Sanctum (Auth)   |
 | PrimeVue (UI Components) | RESTful API      |
 | Tailwind CSS             | Eloquent ORM     |
